@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#142b40">
+  <title>PISM — Generator dokumentów kontroli</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">P</div>
+      <div>
+        <div class="brand-title">PISM <span>/</span> Panel dokumentów</div>
+        <div class="brand-subtitle">Generator zarządzeń o przeprowadzeniu kontroli</div>
+      </div>
+    </div>
+    <div class="topbar-tag"><span class="status-dot"></span> Aplikacja lokalna</div>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">CENTRUM DOKUMENTACJI</p>
+        <h1>Generator dokumentów</h1>
+        <p class="intro-copy">Przygotuj dane kontroli, sprawdź podgląd i pobierz gotowy dokument PDF.</p>
+      </div>
+      <div class="intro-actions">
+        <button class="button button-quiet" id="newDocumentBtn" type="button">Nowy dokument</button>
+        <button class="button button-outline" id="openArchiveBtn" type="button">Archiwum <span id="archiveCount" class="count-pill">0</span></button>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <section class="panel form-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">KROK 01</p>
+            <h2>Dane kontroli</h2>
+          </div>
+          <span class="required-note">* pola wymagane</span>
+        </div>
+
+        <div id="errorsBox" class="alert alert-error" role="alert" hidden>
+          <strong>Sprawdź formularz</strong>
+          <ul id="errorsList"></ul>
+        </div>
+
+        <form id="controlForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="typ">Typ kontroli <span>*</span></label>
+              <select id="typ" name="typ" required>
+                <option value="Zapowiedziana">Zapowiedziana</option>
+                <option value="Niezapowiedziana">Niezapowiedziana</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="data_kontroli">Data kontroli <span>*</span></label>
+              <input type="date" id="data_kontroli" name="data_kontroli" required>
+            </div>
+            <div class="field field-full">
+              <label for="podmiot">Podmiot kontrolowany <span>*</span></label>
+              <input id="podmiot" name="podmiot" value="Rosewood Medical Center" maxlength="180" required>
+            </div>
+            <div class="field field-full">
+              <label for="adres">Adres placówki</label>
+              <input id="adres" name="adres" placeholder="Ulica, kod pocztowy, miejscowość" maxlength="220">
+            </div>
+            <div class="field field-full">
+              <label for="kierownik">Kierownik kontroli <span>*</span></label>
+              <input id="kierownik" name="kierownik" placeholder="Imię i nazwisko" maxlength="120" required>
+            </div>
+
+            <div class="field field-full">
+              <div class="label-row">
+                <label>Członkowie zespołu kontrolnego</label>
+                <button class="text-button" type="button" id="addInspectorBtn">＋ Dodaj inspektora</button>
+              </div>
+              <div id="inspectorsList" class="inspectors-list"></div>
+              <p class="field-hint">Każdemu członkowi zespołu możesz przypisać stanowisko i numer upoważnienia.</p>
+            </div>
+
+            <div class="field field-full">
+              <label for="uzasadnienie">Uzasadnienie wszczęcia kontroli <span>*</span></label>
+              <textarea id="uzasadnienie" name="uzasadnienie" rows="4" placeholder="Opisz przyczynę wszczęcia kontroli…" required></textarea>
+            </div>
+            <div class="field field-full">
+              <label for="zakres">Zakres kontroli <span>*</span></label>
+              <textarea id="zakres" name="zakres" rows="4" placeholder="Wymień obszary i zagadnienia objęte kontrolą…" required></textarea>
+            </div>
+            <div class="field">
+              <label for="godzina">Godzina rozpoczęcia</label>
+              <input type="time" id="godzina" name="godzina">
+            </div>
+            <div class="field">
+              <label for="miejsce">Miejscowość sporządzenia</label>
+              <input id="miejsce" name="miejsce" placeholder="Np. Warszawa" maxlength="100">
+            </div>
+            <div class="field field-full">
+              <label for="dyrektor">Dyrektor / osoba podpisująca</label>
+              <input id="dyrektor" name="dyrektor" value="Michał [nazwisko]" maxlength="120">
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <p class="privacy-note"><span class="lock-icon">▣</span> Dane i archiwum są przechowywane lokalnie w tej przeglądarce.</p>
+            <button class="button button-primary" type="submit" id="generateBtn">
+              <span>Wygeneruj i pobierz PDF</span><span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="preview-column">
+        <section class="panel preview-panel">
+          <div class="panel-heading preview-heading">
+            <div>
+              <p class="eyebrow">KROK 02</p>
+              <h2>Podgląd dokumentu</h2>
+            </div>
+            <span class="live-label"><span class="live-dot"></span> Na żywo</span>
+          </div>
+          <div class="paper-wrap">
+            <article id="documentPreview" class="paper" aria-label="Podgląd dokumentu">
+              <!-- Aktualizowany przez app.js -->
+            </article>
+          </div>
+          <p class="preview-help">Podgląd aktualizuje się podczas wypełniania formularza. Ostateczny układ PDF może nieznacznie różnić się od podglądu ekranowego.</p>
+        </section>
+
+        <section class="panel archive-teaser">
+          <div class="archive-icon">▤</div>
+          <div class="archive-teaser-copy">
+            <strong>Archiwum dokumentów</strong>
+            <span>Wróć do wcześniej wygenerowanych dokumentów zapisanych w tej przeglądarce.</span>
+          </div>
+          <button class="icon-button" id="archiveArrowBtn" type="button" aria-label="Otwórz archiwum">→</button>
+        </section>
+      </aside>
+    </div>
+
+    <footer class="page-footer">
+      <span>PISM · Generator dokumentów</span>
+      <span>Wersja demonstracyjna · Dane przechowywane na tym urządzeniu</span>
+    </footer>
+  </main>
+
+  <div class="modal-backdrop" id="archiveModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">ZAPISANE PLIKI</p>
+          <h2 id="archiveTitle">Archiwum dokumentów</h2>
+        </div>
+        <button class="close-button" id="closeArchiveBtn" type="button" aria-label="Zamknij">×</button>
+      </div>
+      <div id="archiveList" class="archive-list"></div>
+      <div class="modal-footer">
+        <p>Archiwum jest dostępne wyłącznie w tej przeglądarce i na tym urządzeniu.</p>
+        <button class="button button-danger-quiet" id="clearArchiveBtn" type="button">Wyczyść archiwum</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- jsPDF: biblioteka do składania PDF; font Unicode jest dołączony lokalnie w assets/. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
